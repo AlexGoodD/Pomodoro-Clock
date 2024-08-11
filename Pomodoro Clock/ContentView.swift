@@ -103,7 +103,6 @@ struct ContentView: View {
         }
     }
 
-
     func detenerTemporizador() {
         temporizador?.invalidate()
         temporizador = nil
