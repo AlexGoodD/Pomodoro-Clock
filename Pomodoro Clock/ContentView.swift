@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var tiempoRestante = 1 // 1 segundo para pruebas
-    @State private var tiempoTrabajo = 1 // 1 segundo para pruebas
-    @State private var tiempoDescanso = 2 // 2 segundos para pruebas
-    @State private var tiempoDescansoLargo = 3 // 2 segundos para pruebas
+    @State private var tiempoRestante = 1500 // 1 segundo para pruebas
+    @State private var tiempoTrabajo = 1500 // 1 segundo para pruebas
+    @State private var tiempoDescanso = 300 // 2 segundos para pruebas
+    @State private var tiempoDescansoLargo = 1800 // 2 segundos para pruebas
     @State private var enTrabajo = true
+    @State private var enDescanso = false
+    
     @State private var cicloContador = 0 // No. veces que se hace un ciclo
     @State private var progresoActual: CGFloat = 0.0 // Progreso actual
     @State private var temporizador: Timer?
@@ -80,25 +82,48 @@ struct ContentView: View {
 
     func iniciarTemporizador() {
         if temporizador != nil { return }
+        
         temporizador = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             if tiempoRestante > 0 {
                 tiempoRestante -= 1
                 progresoActual = calcularProgreso()
             } else {
-                enTrabajo.toggle()
-                cicloContador = enTrabajo ? cicloContador : min(9, cicloContador + 1)
-
-                if !enTrabajo {
-                    if cicloContador == 4 || cicloContador == 8 {
-                        tiempoRestante = tiempoDescansoLargo
-                    } else {
+                if enTrabajo {
+                    // Cambiar a descanso al terminar el tiempo de trabajo
+                    enTrabajo.toggle()
+                    enDescanso = true
+                    
+                    if cicloContador < 9 {
                         tiempoRestante = tiempoDescanso
                     }
                 } else {
+                    // Cambiar a trabajo al terminar el tiempo de descanso
+                    enTrabajo.toggle()
+                    enDescanso = false
+                    
+                    if cicloContador < 9 {
+                        // Incrementar el contador después de completar un ciclo
+                        cicloContador += 1
+                    }
+
+                    // Configurar el tiempo de trabajo
                     tiempoRestante = tiempoTrabajo
+                }
+                
+                // Establecer el tiempo de descanso largo si el contador llega a 4 o 8
+                if !enTrabajo {
+                    if cicloContador == 4 || cicloContador == 8 {
+                        tiempoRestante = tiempoDescansoLargo
+                    }
                 }
 
                 progresoActual = 0.0
+                
+                // Detener el temporizador cuando el contador llegue a 9
+                if cicloContador == 9 {
+                    temporizador?.invalidate()
+                    temporizador = nil
+                }
             }
         }
     }
